@@ -1,0 +1,10 @@
+name: predfluor
+channels:
+  - conda-forge
+dependencies:
+  - python=3.9
+  - numpy=1.26.4
+  - openpyxl
+  - pandas=2.2.3
+  - rdkit=2025.03.1
+  - scikit-learn=1.4.1
