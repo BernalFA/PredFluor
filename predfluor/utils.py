@@ -5,6 +5,7 @@ repo.
 @author: Dr. Freddy Bernal
 """
 
+import warnings
 from collections import namedtuple
 from pathlib import Path
 
@@ -227,40 +228,41 @@ class FluorescencePredictor:
         return desc
 
     def get_features(self, smiles):
-        try:
-            m = Chem.MolFromSmiles(smiles)
-        except Exception:
-            m = None
-
-        if m is not None:
-            feat1 = self._get_morgan_fp(m)
-            feat2 = self._get_maccs_keys(m)
-            feat3 = self._get_rdkit_descriptors(m)
-            feat4 = self._get_lipinski_desc(m)
-            feat5 = self._get_bcut2d_desc(m)
-            features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
-            return features
+        features_list = []
+        for smi in smiles:
+            m = Chem.MolFromSmiles(smi)
+            if m is not None:
+                feat1 = self._get_morgan_fp(m)
+                feat2 = self._get_maccs_keys(m)
+                feat3 = self._get_rdkit_descriptors(m)
+                feat4 = self._get_lipinski_desc(m)
+                feat5 = self._get_bcut2d_desc(m)
+                features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
+            else:
+                warnings.warn(f"WARNING: {smi} could not be converted to RDKit Mol")
+                features = np.zeros((733))  # 733 is the number of features
+            features_list.append(features)
+        return np.array(features_list)
 
     def _calculate_features(self, smiles, solv_smiles):
-
         features_cmpd = self.get_features(smiles)
         features_solv = self.get_features(solv_smiles)
-        if features_cmpd is not None and features_solv is not None:
-            features = np.concatenate([features_cmpd, features_solv]).reshape(1, -1)
-            return features
+        features = np.hstack([features_cmpd, features_solv])
+        return features
 
     def _predict_wavelength(self, features):
         features_scaled_wl = self.scalers.wl.transform(features)
-        predicted_wl = self.models.wl.predict(features_scaled_wl)[0]
+        predicted_wl = self.models.wl.predict(features_scaled_wl)
         return predicted_wl
 
     def _predict_quantum_yield(self, features):
         features_scaled_qy = self.scalers.qy.transform(features)
-        predicted_qy = self.models.qy.predict(features_scaled_qy)[0]
+        predicted_qy = self.models.qy.predict(features_scaled_qy)
         return predicted_qy
 
     def predict(self, smiles, solv_smiles="O"):
         features = self._calculate_features(smiles, solv_smiles)
         predicted_wl = self._predict_wavelength(features)
         predicted_qy = self._predict_quantum_yield(features)
-        return predicted_wl, predicted_qy
+        result = np.stack((predicted_wl, predicted_qy), axis=1)
+        return result
