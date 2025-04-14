@@ -202,7 +202,7 @@ class FluorescencePredictor:
         """
         # Iterate over molecules
         features_list = []
-        for smi in smiles:
+        for i, smi in enumerate(smiles):
             m = Chem.MolFromSmiles(smi)
             # Calculate features for valid SMILES
             if m is not None:
@@ -215,7 +215,10 @@ class FluorescencePredictor:
             else:
                 # Display warning for invalid SMILES and add a zeros containing array
                 # instead
-                warnings.warn(f"\nWARNING: {smi} could not be converted to RDKit Mol\n")
+                warnings.warn(
+                    f"""\nWARNING: {smi} at index {i} could not be converted
+                              to RDKit Mol\n"""
+                )
                 features = np.zeros((733))  # 733 is the number of features
             features_list.append(features)
         return np.array(features_list)
