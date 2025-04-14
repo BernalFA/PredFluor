@@ -204,6 +204,7 @@ class FluorescencePredictor:
         """
         # Iterate over molecules
         features_list = []
+        warning_list = []
         for i, smi in enumerate(tqdm(smiles, desc="Processing SMILES")):
             m = Chem.MolFromSmiles(smi)
             # Calculate features for valid SMILES
@@ -215,15 +216,18 @@ class FluorescencePredictor:
                 feat5 = self._get_bcut2d_desc(m)
                 features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
             else:
-                # Display warning for invalid SMILES and add a zeros containing array
-                # instead
-                warnings.warn(
-                    f"""
-                    \nWARNING: {smi} at index {i} could not be converted to RDKit Mol\n
-                    """
-                )
+                warning_list.append(i)
+                # add a zeros containing array for invalid SMILES
                 features = np.zeros((733))  # 733 is the number of features
             features_list.append(features)
+        if warning_list:
+            n = len(warning_list)
+            # Display warning for invalid SMILES
+            msg = f"\nThe following SMILES ({n}) could not be converted into RDKit Mol"
+            warnings.warn(msg)
+            for i in warning_list:
+                print(f"{smiles[i]} at index {i}")
+
         return np.array(features_list)
 
     def _calculate_features(
