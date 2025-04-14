@@ -23,13 +23,13 @@ pip install .
 
 ## Usage
 
-Prediction of wavelength of emission and the corresponding quantum yield can be achieved using the provided script, for example:
+Prediction of emission wavelength and the corresponding quantum yield can be achieved using the provided python script, for example:
 
 ```bash
 python predfluor/prediction_script.py DATA/Only_wl_data_ML.csv -smi_col "Chromophore" -o test_prediction
 ```
 
-Use `python prediction_script.py -h` to see more information about usage of this script.
+Use `python prediction_script.py -h` to see more information on how to use this script.
 
 &nbsp; 
 
@@ -47,6 +47,8 @@ predictor = FluorescencePredictor()
 result = predictor.predict(smiles=df["Chromophore"], solv_smiles=["O"] * len(df))
 ```
 
+&nbsp; 
+
 ## Models
 
-For information about the models architecture and performance, please check out the original publication.
+For information about the models' architecture and performance, please check out the original publication.
