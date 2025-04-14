@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PredFluor"
+version = "0.1.0"
+description = "Easy-to-use implementation of predictive models for fluorescence and quantum yield"
+authors = [
+    {name = "Dr. Freddy Bernal"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy==1.26.4",
+    "pandas==2.2.3",
+    "rdkit>=2024.9.6",
+    "openpyxl",
+    "tqdm",
+    "scikit-learn==1.4.1.post1"
+]
+
+[project.urls]
+Repository = "https://github.com/BernalFA/PredFluor"
+
+# Define package dir 
+[tool.setuptools]
+packages = ["predfluor"]
