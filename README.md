@@ -15,7 +15,7 @@ conda create -n predfluor python=3.9
 conda activate predfluor
 # installation
 git clone https://github.com/BernalFA/PredFluor.git
-cd predfluor
+cd PredFluor
 pip install .
 ```
 
