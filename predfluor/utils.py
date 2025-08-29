@@ -11,6 +11,7 @@ import warnings
 from collections import namedtuple
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Optional
 
 import joblib
 import numpy as np
@@ -105,7 +106,7 @@ class FluorescencePredictor:
             np.ndarray: generated fingerprint (len = 512).
         """
         fp = AllChem.GetMorganFingerprintAsBitVect(m, 2, 512)
-        fp = np.array(list(fp), dtype=np.int16)
+        fp = self._format_output(list(fp))
         return fp
 
     def _get_maccs_keys(self, m: Chem.Mol) -> np.ndarray:
@@ -118,7 +119,7 @@ class FluorescencePredictor:
             np.ndarray: generated fingerprint.
         """
         fp = rdMolDescriptors.GetMACCSKeysFingerprint(m)
-        fp = np.array(list(fp), dtype=np.int16)
+        fp = self._format_output(list(fp))
         return fp
 
     def _get_rdkit_descriptors(self, m: Chem.Mol) -> np.ndarray:
@@ -172,7 +173,7 @@ class FluorescencePredictor:
             rdMolDescriptors.CalcNumUnspecifiedAtomStereoCenters(m),
             rdMolDescriptors.CalcTPSA(m),
         ]
-        desc = np.array(desc, dtype=np.int16)
+        desc = self._format_output(desc)
         return desc
 
     def _get_lipinski_desc(self, m: Chem.Mol) -> np.ndarray:
@@ -194,7 +195,7 @@ class FluorescencePredictor:
             GraphDescriptors.Chi0(m),
             GraphDescriptors.Chi1(m),
         ]
-        desc = np.array(desc, dtype=np.int16)
+        desc = self._format_output(desc)
         return desc
 
     def _get_bcut2d_desc(self, m: Chem.Mol) -> np.ndarray:
@@ -207,7 +208,7 @@ class FluorescencePredictor:
             np.ndarray: calculated descriptors.
         """
         desc = [rdMolDescriptors.BCUT2D(m)]
-        desc = np.array(flatten_list(desc), dtype=np.int16)
+        desc = self._format_output(flatten_list(desc))
         return desc
 
     def get_features(self, smiles: Iterable[str]) -> np.ndarray:
@@ -223,6 +224,7 @@ class FluorescencePredictor:
         # Iterate over molecules
         features_list = []
         warning_list = []
+        problematic_list = []
         for i, smi in enumerate(tqdm(smiles, desc="Processing SMILES")):
             m = Chem.MolFromSmiles(smi)
             # Calculate features for valid SMILES
@@ -232,7 +234,10 @@ class FluorescencePredictor:
                 feat3 = self._get_rdkit_descriptors(m)
                 feat4 = self._get_lipinski_desc(m)
                 feat5 = self._get_bcut2d_desc(m)
-                features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
+                try:
+                    features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
+                except ValueError:
+                    problematic_list.append(i)
             else:
                 warning_list.append(i)
                 # add a zeros containing array for invalid SMILES
@@ -315,3 +320,10 @@ class FluorescencePredictor:
         predicted_qy = self._predict_quantum_yield(features)
         result = np.stack((predicted_wl, predicted_qy), axis=1)
         return result
+
+    def _format_output(self, data: list) -> Optional[np.ndarray]:
+        try:
+            res = np.array(data, dtype=np.int16)
+        except ValueError:
+            res = None
+        return res
