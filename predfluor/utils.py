@@ -236,13 +236,11 @@ class FluorescencePredictor:
                 feat5 = self._get_bcut2d_desc(m)
                 try:
                     features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
+                    features_list.append(features)
                 except ValueError:
                     problematic_list.append(i)
             else:
                 warning_list.append(i)
-                # add a zeros containing array for invalid SMILES
-                features = np.zeros((733))  # 733 is the number of features
-            features_list.append(features)
         if warning_list:
             n = len(warning_list)
             # Display warning for invalid SMILES
