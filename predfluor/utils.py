@@ -65,6 +65,7 @@ class FluorescencePredictor:
     def __init__(self):
         self.models = self._load_trained_models()
         self.scalers = self._load_fitted_scalers()
+        self.failed_indexes = {}
 
     def _load_trained_models(self) -> namedtuple:
         """Load trained models for QY and WL from models folder
@@ -238,16 +239,17 @@ class FluorescencePredictor:
                     features = np.concatenate([feat1, feat2, feat3, feat4, feat5])
                     features_list.append(features)
                 except ValueError:
-                    problematic_list.append(i)
+                    problematic_list.append(smiles.index[i])
             else:
-                warning_list.append(i)
+                warning_list.append(smiles.index[i])
         if warning_list:
             n = len(warning_list)
             # Display warning for invalid SMILES
             msg = f"\nThe following SMILES ({n}) could not be converted into RDKit Mol"
             warnings.warn(msg)
             for i in warning_list:
-                print(f"{smiles[i]} at index {i}")
+                print(f"{smiles.at[i]} at index {i}")
+            self.failed_indexes["conflicting_smiles"] = warning_list
         if problematic_list:
             n = len(problematic_list)
             # Display warning for invalid SMILES
@@ -255,7 +257,8 @@ class FluorescencePredictor:
                 calculated"
             warnings.warn(msg)
             for i in problematic_list:
-                print(f"{smiles[i]} at index {i}")
+                print(f"{smiles.at[i]} at index {i}")
+            self.failed_indexes["no_calculated_properties"] = problematic_list
 
         return np.array(features_list)
 
