@@ -10,7 +10,6 @@ import importlib.resources as resources
 import warnings
 from collections import namedtuple
 from collections.abc import Iterable
-from pathlib import Path
 from typing import Optional
 
 import joblib
@@ -57,9 +56,8 @@ class FluorescencePredictor:
     results is a numpy array containing the wavelengths (results[:, 0]) and the quantum
     yields (results[:, 1]) predicted by the trained models.
 
-    IMPORTANT: invalid SMILES are processed as a zero-containing feature vector. Thus,
-    they still produce some predicted values. Please check the given warnings in case
-    of invalid SMILES.
+    IMPORTANT: invalid SMILES and SMILES that fail during descriptor calculation are
+    skipped. Their respective indexes are store as attribute failed_indexes.
     """
 
     def __init__(self):
