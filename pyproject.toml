@@ -26,3 +26,6 @@ Repository = "https://github.com/BernalFA/PredFluor"
 # Define package dir 
 [tool.setuptools]
 packages = ["predfluor"]
+
+[tool.setuptools.package-data]
+"predfluor" = ["models/*.pkl"]
