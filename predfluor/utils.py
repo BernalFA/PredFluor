@@ -6,6 +6,7 @@ based on the notebooks provided in the original repo.
 @author: Dr. Freddy Bernal
 """
 
+import importlib.resources as resources
 import warnings
 from collections import namedtuple
 from collections.abc import Iterable
@@ -23,9 +24,6 @@ from rdkit.Chem import (
 )
 from tqdm import tqdm
 
-
-# Define module path
-MOD_PATH = Path(__file__).parent
 
 # Instantiate namedtuples for models and scalers
 Models = namedtuple("Models", "wl qy")
@@ -64,18 +62,38 @@ class FluorescencePredictor:
     """
 
     def __init__(self):
-        self.models = None
-        self.scalers = None
-        self._initialize()
+        self.models = self._load_trained_models()
+        self.scalers = self._load_fitted_scalers()
 
-    def _initialize(self):
-        """Load trained models and scalars as attributes (named tuples)."""
-        model_qy = joblib.load((MOD_PATH / "../Models/QY_Random.pkl").resolve())
-        model_wl = joblib.load((MOD_PATH / "../Models/WL_Random.pkl").resolve())
-        scaler_wl = joblib.load((MOD_PATH / "../Models/scaler_modelwl.pkl").resolve())
-        scaler_qy = joblib.load((MOD_PATH / "../Models/scaler_model-QY.pkl").resolve())
-        self.models = Models(model_wl, model_qy)
-        self.scalers = Scalers(scaler_wl, scaler_qy)
+    def _load_trained_models(self) -> namedtuple:
+        """Load trained models for QY and WL from models folder
+
+        Returns:
+            namedtuple: loaded models (qy and wl)
+        """
+        model_qy = self._load_pkl("QY_Random.pkl")
+        model_wl = self._load_pkl("WL_Random.pkl")
+        return Models(model_wl, model_qy)
+
+    def _load_fitted_scalers(self) -> namedtuple:
+        """Load fitted scalers to use before QY and WL predictions.
+
+        Returns:
+            namedtuple: loaded scalers (qy and wl)
+        """
+        scaler_qy = self._load_pkl("scaler_model-QY.pkl")
+        scaler_wl = self._load_pkl("scaler_modelwl.pkl")
+        return Scalers(scaler_wl, scaler_qy)
+
+    def _load_pkl(self, file: str):
+        """Helper to load any model or scaler from package resources
+
+        Args:
+            file (str): model or scaler file name (dumped).
+        """
+        with resources.files(__package__).joinpath(f"models/{file}").open("rb") as f:
+            model = joblib.load(f)
+        return model
 
     def _get_morgan_fp(self, m: Chem.Mol) -> np.ndarray:
         """Create Morgan fingerprint for radius 2 (512 bits) for given molecule.
