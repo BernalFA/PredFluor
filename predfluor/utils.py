@@ -250,6 +250,14 @@ class FluorescencePredictor:
             warnings.warn(msg)
             for i in warning_list:
                 print(f"{smiles[i]} at index {i}")
+        if problematic_list:
+            n = len(problematic_list)
+            # Display warning for invalid SMILES
+            msg = f"\nSome descriptors for the following SMILES ({n}) could not be \
+                calculated"
+            warnings.warn(msg)
+            for i in problematic_list:
+                print(f"{smiles[i]} at index {i}")
 
         return np.array(features_list)
 
